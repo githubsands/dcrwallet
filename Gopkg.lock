@@ -95,11 +95,7 @@
     "ptypes/duration",
     "ptypes/timestamp"
   ]
-<<<<<<< HEAD
   revision = "e09c5db296004fbe3f74490e84dcd62c3c5ddb1b"
-=======
-  revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
@@ -131,11 +127,7 @@
     "scrypt",
     "ssh/terminal"
   ]
-<<<<<<< HEAD
   revision = "b2aa35443fbc700ab74c586ae79b81c171851023"
-=======
-  revision = "847319b7fc94cab682988f93da778204da164588"
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
 
 [[projects]]
   branch = "master"
@@ -149,11 +141,7 @@
     "lex/httplex",
     "trace"
   ]
-<<<<<<< HEAD
   revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
-=======
-  revision = "278c6cf336eb9139d63479da09da0cfb40fdc4c8"
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
 
 [[projects]]
   branch = "master"
@@ -168,11 +156,7 @@
     "unix",
     "windows"
   ]
-<<<<<<< HEAD
-  revision = "fcb792cfc275f85145c640d36af94b591eed4275"
-=======
-  revision = "429f518978ab01db8bb6f44b66785088e7fba58b"
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
+  revision = "1d206c9fa8975fb4cf00df1dc8bf3283dc24ba0e"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -192,24 +176,19 @@
     "unicode/norm",
     "unicode/rangetable"
   ]
-<<<<<<< HEAD
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
-=======
-  revision = "1cbadb444a806fd9430d14ad08967ed91da4fa0a"
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
 
 [[projects]]
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "35de2414665fc36f56b72d982c5af480d86de5ab"
+  revision = "aae13d27a44d62f039eeeb93e74e893886673932"
 
 [[projects]]
   name = "google.golang.org/grpc"
   packages = [
     ".",
-<<<<<<< HEAD
     "balancer",
     "balancer/base",
     "balancer/roundrobin",
@@ -218,11 +197,6 @@
     "credentials",
     "encoding",
     "encoding/proto",
-=======
-    "codes",
-    "connectivity",
-    "credentials",
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
     "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
@@ -230,24 +204,16 @@
     "metadata",
     "naming",
     "peer",
-<<<<<<< HEAD
     "resolver",
     "resolver/dns",
     "resolver/passthrough",
-=======
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
     "stats",
     "status",
     "tap",
     "transport"
   ]
-<<<<<<< HEAD
-  revision = "1e2570b1b19ade82d8dbb31bba4e65e9f9ef5b34"
-  version = "v1.11.1"
-=======
-  revision = "f92cdcd7dcdc69e81b2d7b338479a19a8723cfa3"
-  version = "v1.6.0"
->>>>>>> 1a0f3ee17610cec8ed0b7451ac44d4a57288b268
+  revision = "d89cded64628466c4ab532d1f0ba5c220459ebe8"
+  version = "v1.11.2"
 
 [solve-meta]
   analyzer-name = "dep"

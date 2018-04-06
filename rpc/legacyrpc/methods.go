@@ -800,7 +800,7 @@ func getInfo(s *Server, icmd interface{}) (interface{}, error) {
 		bal += balance.Spendable
 	}
 
-	info.Wallet = udb.DBVersion
+	info.Version = udb.DBVersion
 	info.Balance = bal.ToCoin()
 	info.KeypoolOldest = time.Now().Unix()
 	info.KeypoolSize = 0
