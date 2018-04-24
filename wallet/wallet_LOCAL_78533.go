@@ -29,10 +29,7 @@ import (
 	"github.com/decred/dcrd/txscript"
 	"github.com/decred/dcrd/wire"
 	"github.com/decred/dcrwallet/errors"
-<<<<<<< HEAD
 	"github.com/decred/dcrwallet/wallet/internal/walletdb"
-=======
->>>>>>> Introduce errors package and refactor all error handling.
 	"github.com/decred/dcrwallet/wallet/txauthor"
 	"github.com/decred/dcrwallet/wallet/txrules"
 	"github.com/decred/dcrwallet/wallet/udb"
@@ -1324,19 +1321,11 @@ func (w *Wallet) CurrentAddress(account uint32) (dcrutil.Address, error) {
 	child, err := buf.branchXpub.Child(childIndex)
 	if err != nil {
 		return nil, errors.E(op, err)
-<<<<<<< HEAD
 	}
 	addr, err := child.Address(w.chainParams)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-=======
-	}
-	addr, err := child.Address(w.chainParams)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
->>>>>>> Introduce errors package and refactor all error handling.
 	return addr, nil
 }
 
@@ -1667,7 +1656,6 @@ func (w *Wallet) MasterPubKey(account uint32) (*hdkeychain.ExtendedKey, error) {
 		masterPubKey, err = w.Manager.GetMasterPubkey(addrmgrNs, account)
 		return err
 	})
-<<<<<<< HEAD
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -1706,16 +1694,6 @@ func (w *Wallet) CoinType() (uint32, error) {
 		return 0, errors.E(op, err)
 	}
 	return coinType, nil
-=======
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	extKey, err := hdkeychain.NewKeyFromString(masterPubKey)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	return extKey, nil
->>>>>>> Introduce errors package and refactor all error handling.
 }
 
 // CreditCategory describes the type of wallet transaction output.  The category
@@ -2085,7 +2063,6 @@ func (w *Wallet) ListAllTransactions() ([]dcrjson.ListTransactionsResult, error)
 		j--
 	}
 	return txList, nil
-<<<<<<< HEAD
 }
 
 // ListTransactionDetails returns the listtransaction results for a single
@@ -2114,8 +2091,6 @@ func (w *Wallet) ListTransactionDetails(txHash *chainhash.Hash) ([]dcrjson.ListT
 		return nil, errors.E(op, err)
 	}
 	return txList, nil
-=======
->>>>>>> Introduce errors package and refactor all error handling.
 }
 
 // BlockIdentifier identifies a block by either a height in the main chain or a
@@ -3771,11 +3746,7 @@ func (w *Wallet) NeedsAccountsSync() (bool, error) {
 // Create creates an new wallet, writing it to an empty database.  If the passed
 // seed is non-nil, it is used.  Otherwise, a secure random seed of the
 // recommended length is generated.
-<<<<<<< HEAD
 func Create(db DB, pubPass, privPass, seed []byte, params *chaincfg.Params) error {
-=======
-func Create(db walletdb.DB, pubPass, privPass, seed []byte, params *chaincfg.Params) error {
->>>>>>> Introduce errors package and refactor all error handling.
 	const op errors.Op = "wallet.Create"
 	// If a seed was provided, ensure that it is of valid length. Otherwise,
 	// we generate a random seed for the wallet with the recommended seed
@@ -3791,11 +3762,7 @@ func Create(db walletdb.DB, pubPass, privPass, seed []byte, params *chaincfg.Par
 		return errors.E(op, hdkeychain.ErrInvalidSeedLen)
 	}
 
-<<<<<<< HEAD
 	err := udb.Initialize(db.internal(), params, seed, pubPass, privPass)
-=======
-	err := udb.Initialize(db, params, seed, pubPass, privPass)
->>>>>>> Introduce errors package and refactor all error handling.
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -3803,15 +3770,9 @@ func Create(db walletdb.DB, pubPass, privPass, seed []byte, params *chaincfg.Par
 }
 
 // CreateWatchOnly creates a watchonly wallet on the provided db.
-<<<<<<< HEAD
 func CreateWatchOnly(db DB, extendedPubKey string, pubPass []byte, params *chaincfg.Params) error {
 	const op errors.Op = "wallet.CreateWatchOnly"
 	err := udb.InitializeWatchOnly(db.internal(), params, extendedPubKey, pubPass)
-=======
-func CreateWatchOnly(db walletdb.DB, extendedPubKey string, pubPass []byte, params *chaincfg.Params) error {
-	const op errors.Op = "wallet.CreateWatchOnly"
-	err := udb.InitializeWatchOnly(db, params, extendedPubKey, pubPass)
->>>>>>> Introduce errors package and refactor all error handling.
 	if err != nil {
 		return errors.E(op, err)
 	}

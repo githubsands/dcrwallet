@@ -11,9 +11,9 @@ import (
 	"github.com/decred/dcrd/wire"
 	"github.com/decred/dcrwallet/errors"
 	"github.com/decred/dcrwallet/wallet/internal/txsizes"
-	"github.com/decred/dcrwallet/wallet/internal/walletdb"
 	"github.com/decred/dcrwallet/wallet/txrules"
 	"github.com/decred/dcrwallet/wallet/udb"
+	"github.com/decred/dcrwallet/walletdb"
 )
 
 // MakeSecp256k1MultiSigScript creates a multi-signature script that can be
@@ -140,7 +140,14 @@ func (w *Wallet) FetchP2SHMultiSigOutput(outPoint *wire.OutPoint) (*P2SHMultiSig
 		}
 
 		redeemScript, err = w.TxStore.GetTxScript(txmgrNs, mso.ScriptHash[:])
-		return err
+		if err != nil {
+			return err
+		}
+		if redeemScript == nil {
+			return errors.E(errors.NotExist, "missing redeem script")
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, errors.E(op, err)

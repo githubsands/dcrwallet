@@ -1433,11 +1433,19 @@ func getTransaction(s *Server, icmd interface{}) (interface{}, error) {
 	}
 
 	// returns nil details when not found
+<<<<<<< HEAD
 	txd, err := wallet.UnstableAPI(w).TxDetails(txHash)
 	if err != nil {
 		return nil, err
 	}
 	if txd == nil {
+=======
+	details, err := wallet.UnstableAPI(w).TxDetails(txHash)
+	if err != nil {
+		return nil, err
+	}
+	if details == nil {
+>>>>>>> Introduce errors package and refactor all error handling.
 		return nil, rpcErrorf(dcrjson.ErrRPCNoTxInfo, "no information for transaction")
 	}
 
@@ -1445,8 +1453,13 @@ func getTransaction(s *Server, icmd interface{}) (interface{}, error) {
 
 	// TODO: Switch to strings.Builder and hex.NewEncoder (introduced in Go 1.10)
 	var buf bytes.Buffer
+<<<<<<< HEAD
 	buf.Grow(txd.MsgTx.SerializeSize())
 	err = txd.MsgTx.Serialize(&buf)
+=======
+	buf.Grow(details.MsgTx.SerializeSize())
+	err = details.MsgTx.Serialize(&buf)
+>>>>>>> Introduce errors package and refactor all error handling.
 	if err != nil {
 		return nil, err
 	}
@@ -1456,8 +1469,13 @@ func getTransaction(s *Server, icmd interface{}) (interface{}, error) {
 	ret := dcrjson.GetTransactionResult{
 		TxID:            cmd.Txid,
 		Hex:             hex.EncodeToString(buf.Bytes()),
+<<<<<<< HEAD
 		Time:            txd.Received.Unix(),
 		TimeReceived:    txd.Received.Unix(),
+=======
+		Time:            details.Received.Unix(),
+		TimeReceived:    details.Received.Unix(),
+>>>>>>> Introduce errors package and refactor all error handling.
 		WalletConflicts: []string{}, // Not saved
 		//Generated:     blockchain.IsCoinBaseTx(&details.MsgTx),
 	}
@@ -1923,9 +1941,13 @@ func listTransactions(s *Server, icmd interface{}) (interface{}, error) {
 		// For now, don't bother trying to continue if the user
 		// specified an account, since this can't be (easily or
 		// efficiently) calculated.
+<<<<<<< HEAD
 		return nil,
 			errors.E(`Transactions can not be searched by account. ` +
 				`Use "*" to reference all accounts.`)
+=======
+		return nil, errors.E("transactions can not be searched by account")
+>>>>>>> Introduce errors package and refactor all error handling.
 	}
 
 	return w.ListTransactions(*cmd.From, *cmd.Count)
@@ -3406,6 +3428,7 @@ func verifyMessage(s *Server, icmd interface{}) (interface{}, error) {
 	// Mirror Bitcoin Core behavior, which treats all erorrs as an invalid
 	// signature.
 	return err == nil && valid, nil
+<<<<<<< HEAD
 
 WrongAddrKind:
 	return nil, rpcErrorf(dcrjson.ErrRPCInvalidParameter, "address must be secp256k1 P2PK or P2PKH")
@@ -3510,6 +3533,11 @@ func verifySeed(s *Server, icmd interface{}) (interface{}, error) {
 		Result:   matches,
 		CoinType: coinType,
 	}, nil
+=======
+
+WrongAddrKind:
+	return nil, rpcErrorf(dcrjson.ErrRPCInvalidParameter, "address must be secp256k1 P2PK or P2PKH")
+>>>>>>> Introduce errors package and refactor all error handling.
 }
 
 // version handles the version command by returning the RPC API versions of the

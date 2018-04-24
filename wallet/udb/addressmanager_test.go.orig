@@ -19,6 +19,11 @@ import (
 	"github.com/decred/dcrd/chaincfg/chainec"
 	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrutil"
+<<<<<<< HEAD
+	"github.com/decred/dcrwallet/wallet/internal/walletdb"
+=======
+	"github.com/decred/dcrwallet/walletdb"
+>>>>>>> Introduce errors package and refactor all error handling.
 )
 
 // newShaHash converts the passed big-endian hex string into a wire.ShaHash.

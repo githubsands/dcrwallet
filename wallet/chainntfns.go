@@ -697,6 +697,7 @@ func (w *Wallet) processTransaction(dbtx walletdb.ReadWriteTx, rec *udb.TxRecord
 				expandedScript, err = w.TxStore.GetTxScript(txmgrNs,
 					addr.ScriptAddress())
 				if errors.Is(errors.NotExist, err) {
+					return errors.E(op, err)
 					script, done, err := w.Manager.RedeemScript(addrmgrNs, addr)
 					if err != nil {
 						log.Debugf("failed to find redeemscript for "+

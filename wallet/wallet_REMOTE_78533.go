@@ -1,5 +1,5 @@
 // Copyright (c) 2013-2016 The btcsuite developers
-// Copyright (c) 2015-2018 The Decred developers
+// Copyright (c) 2015-2017 The Decred developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -29,13 +29,10 @@ import (
 	"github.com/decred/dcrd/txscript"
 	"github.com/decred/dcrd/wire"
 	"github.com/decred/dcrwallet/errors"
-<<<<<<< HEAD
-	"github.com/decred/dcrwallet/wallet/internal/walletdb"
-=======
->>>>>>> Introduce errors package and refactor all error handling.
 	"github.com/decred/dcrwallet/wallet/txauthor"
 	"github.com/decred/dcrwallet/wallet/txrules"
 	"github.com/decred/dcrwallet/wallet/udb"
+	"github.com/decred/dcrwallet/walletdb"
 	"github.com/jrick/bitset"
 	"golang.org/x/sync/errgroup"
 )
@@ -149,7 +146,7 @@ type Wallet struct {
 
 // Config represents the configuration options needed to initialize a wallet.
 type Config struct {
-	DB DB
+	DB walletdb.DB
 
 	PubPassphrase []byte
 
@@ -1324,19 +1321,11 @@ func (w *Wallet) CurrentAddress(account uint32) (dcrutil.Address, error) {
 	child, err := buf.branchXpub.Child(childIndex)
 	if err != nil {
 		return nil, errors.E(op, err)
-<<<<<<< HEAD
 	}
 	addr, err := child.Address(w.chainParams)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
-=======
-	}
-	addr, err := child.Address(w.chainParams)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
->>>>>>> Introduce errors package and refactor all error handling.
 	return addr, nil
 }
 
@@ -1667,7 +1656,6 @@ func (w *Wallet) MasterPubKey(account uint32) (*hdkeychain.ExtendedKey, error) {
 		masterPubKey, err = w.Manager.GetMasterPubkey(addrmgrNs, account)
 		return err
 	})
-<<<<<<< HEAD
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
@@ -1676,46 +1664,6 @@ func (w *Wallet) MasterPubKey(account uint32) (*hdkeychain.ExtendedKey, error) {
 		return nil, errors.E(op, err)
 	}
 	return extKey, nil
-}
-
-// CoinTypeKey returns the BIP0044 coin type private key for the passed account.
-func (w *Wallet) CoinTypeKey() (*hdkeychain.ExtendedKey, error) {
-	const op errors.Op = "wallet.CoinTypeKey"
-	var coinTypePrivateKey *hdkeychain.ExtendedKey
-	err := walletdb.View(w.db, func(tx walletdb.ReadTx) error {
-		var err error
-		coinTypePrivateKey, err = w.Manager.CoinTypePrivKey(tx)
-		return err
-	})
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	return coinTypePrivateKey, nil
-}
-
-// CoinType returns the SLIP0044 or legacy coin type for the passed account.
-func (w *Wallet) CoinType() (uint32, error) {
-	const op errors.Op = "wallet.CoinType"
-	var coinType uint32
-	err := walletdb.View(w.db, func(tx walletdb.ReadTx) error {
-		var err error
-		coinType, err = w.Manager.CoinType(tx)
-		return err
-	})
-	if err != nil {
-		return 0, errors.E(op, err)
-	}
-	return coinType, nil
-=======
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	extKey, err := hdkeychain.NewKeyFromString(masterPubKey)
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	return extKey, nil
->>>>>>> Introduce errors package and refactor all error handling.
 }
 
 // CreditCategory describes the type of wallet transaction output.  The category
@@ -2085,37 +2033,6 @@ func (w *Wallet) ListAllTransactions() ([]dcrjson.ListTransactionsResult, error)
 		j--
 	}
 	return txList, nil
-<<<<<<< HEAD
-}
-
-// ListTransactionDetails returns the listtransaction results for a single
-// transaction.
-func (w *Wallet) ListTransactionDetails(txHash *chainhash.Hash) ([]dcrjson.ListTransactionsResult, error) {
-	const op errors.Op = "wallet.ListTransactionDetails"
-	txList := []dcrjson.ListTransactionsResult{}
-	err := walletdb.View(w.db, func(dbtx walletdb.ReadTx) error {
-		txmgrNs := dbtx.ReadBucket(wtxmgrNamespaceKey)
-
-		// Get current block.  The block height used for calculating
-		// the number of tx confirmations.
-		_, tipHeight := w.TxStore.MainChainTip(txmgrNs)
-
-		txd, err := w.TxStore.TxDetails(txmgrNs, txHash)
-		if err != nil {
-			return err
-		}
-		sends, receives := listTransactions(dbtx, txd, w.Manager, tipHeight, w.chainParams)
-		txList = make([]dcrjson.ListTransactionsResult, 0, len(sends)+len(receives))
-		txList = append(txList, receives...)
-		txList = append(txList, sends...)
-		return nil
-	})
-	if err != nil {
-		return nil, errors.E(op, err)
-	}
-	return txList, nil
-=======
->>>>>>> Introduce errors package and refactor all error handling.
 }
 
 // BlockIdentifier identifies a block by either a height in the main chain or a
@@ -3476,19 +3393,21 @@ func (w *Wallet) SignTransaction(tx *wire.MsgTx, hashType txscript.SigHashType, 
 				}
 
 				// First check tx manager script store.
-				script, err := w.TxStore.GetTxScript(txmgrNs,
+				scrTxStore, err := w.TxStore.GetTxScript(txmgrNs,
 					addr.ScriptAddress())
-				if errors.Is(errors.NotExist, err) {
-					// Then check the address manager.
-					sc, done, err := w.Manager.RedeemScript(addrmgrNs, addr)
-					if err != nil {
-						return nil, err
-					}
-					script = sc
-					doneFuncs = append(doneFuncs, done)
-				} else if err != nil {
+				if err != nil {
 					return nil, err
 				}
+				if scrTxStore != nil {
+					return scrTxStore, nil
+				}
+
+				// Then check the address manager.
+				script, done, err := w.Manager.RedeemScript(addrmgrNs, addr)
+				if err != nil {
+					return nil, err
+				}
+				doneFuncs = append(doneFuncs, done)
 				return script, nil
 			})
 
@@ -3771,11 +3690,7 @@ func (w *Wallet) NeedsAccountsSync() (bool, error) {
 // Create creates an new wallet, writing it to an empty database.  If the passed
 // seed is non-nil, it is used.  Otherwise, a secure random seed of the
 // recommended length is generated.
-<<<<<<< HEAD
-func Create(db DB, pubPass, privPass, seed []byte, params *chaincfg.Params) error {
-=======
 func Create(db walletdb.DB, pubPass, privPass, seed []byte, params *chaincfg.Params) error {
->>>>>>> Introduce errors package and refactor all error handling.
 	const op errors.Op = "wallet.Create"
 	// If a seed was provided, ensure that it is of valid length. Otherwise,
 	// we generate a random seed for the wallet with the recommended seed
@@ -3791,11 +3706,7 @@ func Create(db walletdb.DB, pubPass, privPass, seed []byte, params *chaincfg.Par
 		return errors.E(op, hdkeychain.ErrInvalidSeedLen)
 	}
 
-<<<<<<< HEAD
-	err := udb.Initialize(db.internal(), params, seed, pubPass, privPass)
-=======
 	err := udb.Initialize(db, params, seed, pubPass, privPass)
->>>>>>> Introduce errors package and refactor all error handling.
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -3803,15 +3714,9 @@ func Create(db walletdb.DB, pubPass, privPass, seed []byte, params *chaincfg.Par
 }
 
 // CreateWatchOnly creates a watchonly wallet on the provided db.
-<<<<<<< HEAD
-func CreateWatchOnly(db DB, extendedPubKey string, pubPass []byte, params *chaincfg.Params) error {
-	const op errors.Op = "wallet.CreateWatchOnly"
-	err := udb.InitializeWatchOnly(db.internal(), params, extendedPubKey, pubPass)
-=======
 func CreateWatchOnly(db walletdb.DB, extendedPubKey string, pubPass []byte, params *chaincfg.Params) error {
 	const op errors.Op = "wallet.CreateWatchOnly"
 	err := udb.InitializeWatchOnly(db, params, extendedPubKey, pubPass)
->>>>>>> Introduce errors package and refactor all error handling.
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -3885,26 +3790,25 @@ func decodeStakePoolColdExtKey(encStr string, params *chaincfg.Params) (map[stri
 func Open(cfg *Config) (*Wallet, error) {
 	const op errors.Op = "wallet.Open"
 	// Migrate to the unified DB if necessary.
-	db := cfg.DB.internal()
-	needsMigration, err := udb.NeedsMigration(db)
+	needsMigration, err := udb.NeedsMigration(cfg.DB)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 	if needsMigration {
-		err := udb.Migrate(db, cfg.Params)
+		err := udb.Migrate(cfg.DB, cfg.Params)
 		if err != nil {
 			return nil, errors.E(op, err)
 		}
 	}
 
 	// Perform upgrades as necessary.
-	err = udb.Upgrade(db, cfg.PubPassphrase)
+	err = udb.Upgrade(cfg.DB, cfg.PubPassphrase)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
 
 	w := &Wallet{
-		db: db,
+		db: cfg.DB,
 
 		// StakeOptions
 		votingEnabled: cfg.VotingEnabled,
@@ -3939,7 +3843,7 @@ func Open(cfg *Config) (*Wallet, error) {
 	}
 
 	// Open database managers
-	w.Manager, w.TxStore, w.StakeMgr, err = udb.Open(db, cfg.Params, cfg.PubPassphrase)
+	w.Manager, w.TxStore, w.StakeMgr, err = udb.Open(cfg.DB, cfg.Params, cfg.PubPassphrase)
 	if err != nil {
 		return nil, errors.E(op, err)
 	}
