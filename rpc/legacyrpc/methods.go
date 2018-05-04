@@ -8,12 +8,15 @@ package legacyrpc
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"sync"
 	"time"
@@ -80,6 +83,8 @@ var handlers = map[string]handler{
 	"getmasterpubkey":         {fn: getMasterPubkey},
 	"getmultisigoutinfo":      {fn: getMultisigOutInfo},
 	"getnewaddress":           {fn: getNewAddress},
+	"getcontracthash":         {fn: getContractHash},
+	"getpaytocontractaddress": {fn: getPayToContractAddress},
 	"getrawchangeaddress":     {fn: getRawChangeAddress},
 	"getreceivedbyaccount":    {fn: getReceivedByAccount},
 	"getreceivedbyaddress":    {fn: getReceivedByAddress},
@@ -625,6 +630,53 @@ func getAddressesByAccount(s *Server, icmd interface{}) (interface{}, error) {
 	}
 
 	return addrsStr, nil
+}
+
+func contractHash(contractArray []byte) (hashedContracts []byte) {
+
+	var hashedContracts []Hash
+	for i := range contractArray {
+		hashedContracts[i] = hmac.New(sha512.New, contractArray[i])
+	}
+
+	return hashedContracts
+}
+
+func getContractHash(s *Server, icmd interface{}) (interface{}, error) {
+	cmd := icmd.(*dcrjson.GetContractHashCmd)
+	w, ok := s.walletLoader.LoadedWallet()
+	if !ok {
+		return nil, &ErrUnloadedWallet
+	}
+
+	hashedContracts := contractHash(contractArray)
+
+	result := dcrjson.GetContractHashResult{
+		ContractHash: ContractHash,
+	}
+
+	return result
+}
+
+func getPayToContractAddress(s *Server, icmd interface{}) (interface{}, error) {
+	cmd := icmd.(*dcrjson.GetPayToContractAddressCmd)
+	w, ok := s.walletLoader.LoadedWallet()
+	if !ok {
+		return nil, &ErrUnloadedWallet
+	}
+
+	var contractArray []byte
+	for i := range cmd.FilePath {
+		contractArray[i] = ioutil.ReadFile(*cmd.FilePath[i])
+	}
+
+	hashedContracts := contractHash(contractArray)
+
+	result := dcrjson.GetPayToContractAddressResult{
+		Address: ContractAddress,
+	}
+
+	return result
 }
 
 // getBalance handles a getbalance request by returning the balance for an
