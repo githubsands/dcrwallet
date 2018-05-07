@@ -83,7 +83,7 @@
     "txscript",
     "wire"
   ]
-  revision = "f6471bbd9c2586a265ccde254a5642ba2e78e623"
+  revision = "0921280e6e232b66f19ada00ba9adad1d82c90a5"
   source = "github.com/githubsands/dcrd"
 
 [[projects]]
