@@ -8,13 +8,22 @@ package legacyrpc
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+<<<<<<< HEAD
+	"errors"
+=======
+>>>>>>> e0f065d... update
+	"hash"
+	"io/ioutil"
 	"sync"
 	"time"
 
+	"github.com/decred/base58"
 	"github.com/decred/dcrd/blockchain/stake"
 	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/chaincfg/chainec"
@@ -1325,6 +1334,201 @@ func getMasterPubkey(s *Server, icmd interface{}) (interface{}, error) {
 	return masterPubKey.String(), nil
 }
 
+func hashContracts(contractArray [][]byte, contractAmounts int) ([][]byte, error) {
+
+	var hashedContracts []hash.Hash
+	HashedContractByte := make([][]byte, contractAmounts)
+	for i := range contractArray {
+		hashedContracts[i] = hmac.New(sha512.New, contractArray[i])
+		HashedContractByte[i] = hashedContracts[i].Sum(nil)
+	}
+
+	return HashedContractByte, nil
+}
+
+func getContractHash(s *Server, icmd interface{}) (interface{}, error) {
+	cmd := icmd.(*dcrjson.GetContractHashCmd)
+
+	contractArray := make([][]byte, len(cmd.FilePath)) // make a slice contractArray that takes in type contracts (type byte[])
+	for i := range cmd.FilePath {
+		contractArray[i], _ = ioutil.ReadFile(cmd.FilePath[i])
+	}
+
+	contractAmounts := len(cmd.FilePath)
+	hashedContracts, _ := hashContracts(contractArray, contractAmounts)
+
+	//TODO: NEED TO CHANGE HASHEDCONTRACTS TO A STRING MULTIDIMENSIONAL ARRAY HERE
+
+	stringHashedContracts := make([]string, contractAmounts)
+	for i := range hashedContracts {
+		stringHashedContracts[i] = string(hashedContracts[i])
+	}
+
+	return &dcrjson.GetContractHashResult{
+		ContractHash: stringHashedContracts,
+	}, nil
+}
+
+func getPayToContractAddress(s *Server, icmd interface{}) (interface{}, error) {
+	cmd := icmd.(*dcrjson.GetPayToContractAddressCmd)
+	w, ok := s.walletLoader.LoadedWallet()
+	if !ok {
+		return nil, ErrUnloadedWallet
+	}
+
+	contractArray := make([][]byte, len(cmd.FilePath)) // make a slice contractArray that takes in type contracts (type byte[])
+	for i := range cmd.FilePath {
+		contractArray[i], _ = ioutil.ReadFile(cmd.FilePath[i])
+	}
+
+	contractAmounts := len(cmd.FilePath)
+	HashedContractByte, _ := hashContracts(contractArray, contractAmounts)
+
+	// Pay to Contract Protocol requires that the hashed contracts first be lexigraphically sorted. Since HMAC-SHA512 outputs contracts
+	// that are the same size/length sorting by length of contract is unnecessary and only increases complexities. Because of this the algorithm
+	// only sorts by value, in binary.
+	for i := range HashedContractByte {
+		for j := range HashedContractByte {
+			if HashedContractByte[i][j] > HashedContractByte[i][j+1] {
+				HashedContractByte[i], HashedContractByte[i+1] = HashedContractByte[i+1], HashedContractByte[i]
+			}
+		}
+	}
+
+	// Append all hashed contracts i.e h1 + h2 + h3 to create AppendHashedContracts for use in P2PH? key derivation.
+	AppenedHashes := make([]byte, 1)
+	for i := range HashedContractByte {
+		for j := range HashedContractByte {
+<<<<<<< HEAD
+			AppenedHashes = append(AppenedHashes, HashedContractByte[i][j])
+=======
+			AppenededContractHashes = append(AppenededContractHashes, HashedContractByte[i][j])
+>>>>>>> e0f065d... update
+		}
+
+	}
+
+	// Split combined hash into segments of 4 hex characters.  256 bits = 64 hex characters
+	// 64/4 = 16.  Therefore we need a slice of capacity 16.
+<<<<<<< HEAD
+	SegmentedHashedContracts := make([]byte, 16)
+	for i := 0; i < len(segmentedHashedContracts); i++ {
+		SegmentedHashedContracts[i] = AppenededContractHashes[i : i+5]
+=======
+	SegmentedHashedContracts := make([][]byte, 16)
+	for i := 0; i < len(SegmentedHashedContracts); i++ {
+		SegmentedHashedContracts[i] = []byte(AppenededContractHashes[i : i+5])
+>>>>>>> e0f065d... update
+	}
+
+	// Take the BIP32 partial derivation path of appendedhashcontracts. A couple things are done here
+	// SegmentedHashedContracts is turned to type string so the NewKeyFromString function can be utilized.
+	// NewKeyFromString returns type extended key, this way we can now utilize the child() function.
+	SegmentedHashedContractsExtKeys := make([][]hdkeychain.ExtendedKey, 16)
+	for i := 0; i < len(SegmentedHashedContractsExtKeys); i++ {
+		SegmentedHashedContractsExtKeys, _ = hdkeychain.NewKeyFromString(string(SegmentedHashedContracts[i]))
+	}
+
+	// Now derived the BIP32 partial derivaiton path.  Note that this path has a depth of 16.
+<<<<<<< HEAD
+	var DerivedHashedContracts hdkeychain.ExtendedKey
+	for i := 0; i < 16; i++ {
+		switch i {
+		case i == 0:
+			DerivedHashedContracts = SegmentedHashedContractsExtKeys[i]
+		default:
+			DerivedHashedContracts = DerivedHashedContracts.Child(SegmentedHashedContractsExtKeys[i])
+		}
+=======
+	var DerivedHashedContracts *hdkeychain.ExtendedKey
+	DerivedHashedContracts = SegmentedHashedContractsExtKeys[0]
+	for i := 1; i < 16; i++ {
+		DerivedHashedContracts, _ = DerivedHashedContracts.Child(SegmentedHashedContractsExtKeys[i])
+>>>>>>> e0f065d... update
+	}
+
+	// Here we first turn our DerivedHashedContracts  (type extended key) into a string which allows the conversion  to a byte slice
+	// using decode().
+	// This way we have the correct type, []byte, to create the single sliced hash.
+<<<<<<< HEAD
+<<<<<<< HEAD
+	stringDerivedHashedContracts := DerivedHashedContracts.String()           //#1
+	ByteDerivedHashedContracts := base58.Decode(stringDerivedHashedContracts) //#1
+=======
+	stringDerivedHashedContracts := DerivedHashedContracts.String() //#1
+	byteDerivedHashedContracts := base58.Decode(stringDerivedHashedContracts) //#1
+>>>>>>> 5e432e6... update
+	append
+=======
+	stringDerivedHashedContracts := DerivedHashedContracts.String()           //#1
+	byteDerivedHashedContracts := base58.Decode(stringDerivedHashedContracts) //#1
+>>>>>>> e0f065d... update
+
+	// The basepayment is the coin type key. w.CoinTypeKey() is a method that grabs the coin type key from a wallet instance, w.
+	BasePayment, err := w.CoinTypeKey()
+	if err != nil {
+		return nil, err
+	}
+
+	// This block finalizes our ammened basepayment hash with the ammened hashed contracts to get the extended key which is needed
+	// for the address derivation process
+	BasePaymentByte := []byte(BasePayment.String())
+	AppenedHashesBasePayment := make([]byte, 1)
+	for i := range BasePaymentByte {
+		AppenedHashesBasePayment = append(AppenedHashesBasePayment, BasePaymentByte[i])
+	}
+	for i := range AppenedHashes {
+		AppenedHashesBasePayment = append(AppenedHashesBasePayment, AppenedHashes[i])
+	}
+	AppenedHashesBasePaymentExtKey, err := hdkeychain.NewKeyFromString(string(AppenedHashesBasePayment))
+	// Here we first turn our BasePayment (type extended key) into string which allows the converison to a byte slice using
+	// decode this way we have the correct type, byte, to append contract partial hash derivation to the basepayment.
+<<<<<<< HEAD
+<<<<<<< HEAD
+	stringBasePayment := BasePayment.String()           //#1
+	ByteBasePayment := base58.Decode(BasePaymentString) //#1
+=======
+	stringBasePayment := BasePayment.String() //#1
+	byteBasePayment := base58.Decode(stringBasePayment) //#1
+>>>>>>> 5e432e6... update
+=======
+	stringBasePayment := BasePayment.String()           //#1
+	byteBasePayment := base58.Decode(stringBasePayment) //#1
+>>>>>>> e0f065d... update
+
+	// Now appened the basepayment with the derivedhashedcontracts to be used to create a create a public extended key
+	PrependedContractBase := append(byteBasePayment, byteDerivedHashedContracts)
+	PublicExtKey, err := BasePayment.Child(PrependedContractBase)
+	if err != nil {
+		return nil, err
+	}
+
+<<<<<<< HEAD
+=======
+	stringPublicExtKey := PublicExtKey.String()
+	bytePublicExtKey := base58.Decode(stringPublicExtKey)
+
+>>>>>>> 5e432e6... update
+	// Create a new address interface
+	net := config.ChainParams
+	addr, err := dcrutil.NewAddressPubKey(bytePublicExtKey, net)
+	if err != nil {
+		return nil, err
+	}
+
+	// Obtain the public key of the hash and return the encodedAddress
+	addr.Hash160()
+	ContractAddress := addr.EncodeAddress()
+
+	return &dcrjson.GetPayToContractAddressResult{
+		ContractAddress: ContractAddress,
+	}, nil
+<<<<<<< HEAD
+	// I need to make a function that returns 1) a string that is not encoded, 2) .....
+=======
+>>>>>>> 5e432e6... update
+}
+
 // getStakeInfo gets a large amounts of information about the stake environment
 // and a number of statistics about local staking in the wallet.
 func getStakeInfo(s *Server, icmd interface{}) (interface{}, error) {
@@ -1593,8 +1797,6 @@ func getWalletFee(s *Server, icmd interface{}) (interface{}, error) {
 // separated by newlines.  It is set during init.  These usages are used for all
 // locales.
 //
-//go:generate go run ../../internal/rpchelp/genrpcserverhelp.go legacyrpc
-//go:generate gofmt -w rpcserverhelp.go
 
 var helpDescs map[string]string
 var helpDescsMu sync.Mutex // Help may execute concurrently, so synchronize access.
