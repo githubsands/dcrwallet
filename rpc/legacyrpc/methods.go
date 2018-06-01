@@ -14,10 +14,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-<<<<<<< HEAD
 	"errors"
-=======
->>>>>>> e0f065d... update
 	"hash"
 	"io/ioutil"
 	"sync"
@@ -81,10 +78,12 @@ var handlers = map[string]handler{
 	"getbalance":              {fn: getBalance},
 	"getbestblockhash":        {fn: getBestBlockHash},
 	"getblockcount":           {fn: getBlockCount},
+	"getcontracthash":		   {fn: getContractHash},
 	"getinfo":                 {fn: getInfo},
 	"getmasterpubkey":         {fn: getMasterPubkey},
 	"getmultisigoutinfo":      {fn: getMultisigOutInfo},
 	"getnewaddress":           {fn: getNewAddress},
+	"getpaytocontractaddress": {fn: getPayToContractAddress}
 	"getrawchangeaddress":     {fn: getRawChangeAddress},
 	"getreceivedbyaccount":    {fn: getReceivedByAccount},
 	"getreceivedbyaddress":    {fn: getReceivedByAddress},
