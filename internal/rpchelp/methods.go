@@ -94,6 +94,7 @@ var Methods = []struct {
 	{"ticketsforaddress", returnsBool},
 	{"validateaddress", []interface{}{(*types.ValidateAddressWalletResult)(nil)}},
 	{"verifymessage", returnsBool},
+	{"verifyseed", []interface{}{(*types.VerifySeedResult)(nil)}},
 	{"version", []interface{}{(*map[string]dcrdtypes.VersionResult)(nil)}},
 	{"walletinfo", []interface{}{(*types.WalletInfoResult)(nil)}},
 	{"walletislocked", returnsBool},
